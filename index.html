@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Minesweeper</title>
+        <link rel="stylesheet" href="minesweeper.css" />
+    </head>
+
+    <body>
+        <h1>Minesweeper</h1>
+        <div class="buttons">
+            <button onclick="init(4,2)">Begginer</button>
+            <button onclick="init(8,14)">Hard</button>
+            <button onclick="init(12,32)">Expert</button>
+        </div>
+        <div class="modal">
+            <div class="lives">Lives:</div>
+            <button class="restart" onclick="init()">😀</button>
+            <div class="flags">Flags:</div>
+        </div>
+        <div class="board-container"></div>
+        <div class="timer">TIMER:</div>
+
+        <script src="js/util.js"></script>
+        <script src="js/minesweeper.js"></script>
+    </body>
+</html>
