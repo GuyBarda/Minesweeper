@@ -4,6 +4,7 @@
 function setMines(board, howMuchMines) {
     var rndI = getRandomInt(0, board.length);
     var rndJ = getRandomInt(0, board.length);
+
     for (let i = 0; i < howMuchMines; i++) {
         while (board[rndI][rndJ].isMine) {
             rndI = getRandomInt(0, board.length);
@@ -21,7 +22,6 @@ function countMine(cellI, cellJ, board) {
         for (var j = cellJ - 1; j <= cellJ + 1; j++) {
             if (j < 0 || j >= board[i].length) continue;
             if (i === cellI && j === cellJ) continue;
-            // if (board[i][j] === LIFE || board[i][j] === SUPER_LIFE) mineCount++;
             if (board[i][j].isMine) mineCount++;
         }
     }
@@ -42,42 +42,29 @@ function setMinesNegsCount(board) {
     renderBoard(board);
 }
 
-// check if all the cells around him are empty
-// return true only if all of them aren't mine
+function toggleFlag(cell, cellI, cellJ, mark) {
+    var elFlags = document.querySelector(".flags");
+    var elCell = document.querySelector(`.cell-${cellI}-${cellJ}`);
 
-// function checkIfLonely(cellI, cellJ, board) {
-//     for (var i = cellI - 1; i <= cellI + 1; i++) {
-//         if (i < 0 || i >= board.length) continue;
-//         for (var j = cellJ - 1; j <= cellJ + 1; j++) {
-//             if (j < 0 || j >= board[i].length) continue;
-//             if (i === cellI && j === cellJ) continue;
-//             if (board[i][j].isMine) return false;
-//         }
-//     }
-//     return true;
-// }
+    cell.isMarked = mark;
+    mark ? gGame.markedCount++ : gGame.markedCount--;
+    console.log(`want to mark?: ${mark} \nhow many flags are on the board: ${gGame.markedCount}`);
 
-// function findRandomEmptyCell() {
-//     var emptyCells = [];
-//     for (let i = 1; i < gBoard.length - 1; i++) {
-//         for (let j = 1; j < gBoard[i].length - 1; j++) {
-//             if (!gBoard[i][j]) emptyCells.push({ i, j });
-//         }
-//     }
-//     var rndIdx = getRandomIntInclusive(0, emptyCells.length - 1);
-//     return emptyCells[rndIdx];
-// }
+    renderCell(cellI, cellJ, mark ? FLAG : EMPTY);
+    elCell.classList.toggle("marked");
+    elFlags.innerHTML = `Flags: \n${gLevel.MINES - gGame.markedCount}`;
+}
 
 function renderCell(cellI, cellJ, value) {
     // Select the elCell and set the value
     var elCell = document.querySelector(`.cell-${cellI}-${cellJ}`);
-    elCell.innerHTML = value;
+    elCell.innerText = value;
 }
 
-function changeSmile() {
+function changeSmile(mood) {
     var elRestart = document.querySelector(".restart");
-    elRestart.innerText = "🤨";
-    setTimeout(() => (elRestart.innerText = "😀"), 500);
+    elRestart.innerText = mood;
+    setTimeout(() => (elRestart.innerText = HAPPY), 500);
 }
 
 function getRandomInt(min, max) {

@@ -4,6 +4,7 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    font-family: "Times New Roman", Times, serif;
     background-color: rgb(231, 190, 190);
     /* color: white; */
 }
@@ -13,7 +14,6 @@ table {
     border-color: rgb(51, 50, 50);
     border-radius: 7px;
     border-spacing: 0px 0;
-    margin-bottom: 20px;
 }
 
 td {
@@ -27,24 +27,49 @@ td {
 h1 {
     height: max-content;
     width: max-content;
-    font-family: cursive;
     font-size: 100px;
-    padding: 6px;
+    padding: 10px;
+    border-radius: 7px;
     background-color: rgb(189, 45, 45);
 }
 
-.buttons button {
-    font-size: max-content;
-    border: 2px gray solid;
+.buttons {
+    width: max-content;
+    height: max-content;
+    border: 2px rgb(137, 32, 32) solid;
     border-radius: 7px;
-    margin-top: 20px;
-    padding: 10px;
-    font-family: cursive;
     background-color: rgb(137, 32, 32);
+    padding-inline: 20px;
 }
+.buttons button {
+    font-size: 2rem;
+    border: 2px rgb(137, 32, 32) solid;
+    padding: 10px;
+    font-family: "Times New Roman", Times, serif;
+    background-color: rgb(137, 32, 32);
+    margin: 10px;
+}
+.buttons button:hover {
+    color: #fff;
+    text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px #0fa, 0 0 82px #0fa, 0 0 92px #0fa, 0 0 102px #0fa,
+        0 0 151px #0fa;
+}
+
+.modal {
+    padding: 15px;
+    padding-inline: 50px;
+    margin-bottom: 10px;
+    background-color: rgb(189, 45, 45);
+    border-radius: 7px;
+    gap: 20px;
+    display: flex;
+    flex-direction: row;
+    font-size: 2rem;
+}
+
 .cell {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     text-align: center;
     font-size: 1.5em;
 }
@@ -53,14 +78,12 @@ h1 {
     background-color: rgb(85, 84, 84);
 }
 
-.marked {
-    background-color: rgb(249, 0, 0);
-}
-
 .restart {
+    font-size: 1.5rem;
     border: 2px gray solid;
     border-radius: 7px;
-    margin-top: 20px;
+    margin-top: 10px;
+    margin-inline: 30px;
     padding: 10px;
     font-family: cursive;
     background-color: rgb(137, 32, 32);
@@ -69,33 +92,31 @@ h1 {
 .restart:hover {
     background-color: rgba(54, 12, 12, 0.748);
 }
-.modal {
-    font-family: cursive;
-    padding: 15px;
-    margin-bottom: 10px;
-    background-color: rgb(189, 45, 45);
+
+.hint {
+    font-size: 1.5rem;
+    border: 2px gray solid;
     border-radius: 7px;
-    gap: 20px;
-    display: flex;
-    flex-direction: row;
-}
-img {
-    width: 40px;
-    height: 40px;
+    margin-top: 20px;
+    padding: 15px;
+    font-family: cursive;
+    background-color: rgb(137, 32, 32);
 }
 
-.greeting {
-    width: max-content;
-    height: max-content;
+.hint:hover {
+    background-color: rgba(54, 12, 12, 0.748);
 }
 
-.hidden {
-    display: none;
+.hint-clicked {
+    background-color: rgb(192, 46, 46);
+    box-shadow: 0 0 5px 3px rgb(255, 255, 255), /* inner white */ 0 0 10px 15px rgb(245, 235, 151),
+        /* middle magenta */ 0 0 30px 20px rgb(247, 237, 96); /* outer cyan */
 }
 
 .timer {
-    font-family: cursive;
-    padding: 5px;
+    font-size: 1.5rem;
+    padding: 10px;
+    padding-right: 15px;
     margin-bottom: 10px;
     background-color: rgb(189, 45, 45);
     border-radius: 7px;

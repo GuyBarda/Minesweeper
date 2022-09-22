@@ -3,23 +3,29 @@
 const EMPTY = "";
 const FLAG = "🚩";
 const MINE = "💣";
+const HAPPY = "🙂";
+const EXCITED = "😀";
+const WONDERING = "🤨";
+const HIT_BOMB = "😣";
+const LOSE = "😩";
+const WIN = "🤩";
 
 const BEGINNER = 4;
 const MEDIUM = 8;
 const EXPERT = 12;
-
-const MINE_IMAGE = `<img src="img/bomb.png" alt=""></img>`;
 
 const MINES_BEGINNER = 2;
 const MINES_MEDIUM = 14;
 const MINES_EXPERT = 32;
 
 var gGame = {
-    clickedYet: false,
+    firstClick: false,
     isOn: false,
     shownCount: 0,
     markedCount: 0,
     secsPassed: 0,
+    isHint: false,
+    hintCount: 3,
 };
 var gLevel = {
     SIZE: 4,
@@ -31,27 +37,32 @@ var gBoard;
 var gLives;
 
 function init(size = 4, mines = 2) {
+    gLives = mines === 2 ? 2 : 3; // if the game is on Beginner set the lives to 2
+
     gLevel.SIZE = size;
     gLevel.MINES = mines;
-    gLives = mines === 2 ? 2 : 3; // if the game is on Beginner set the lives to 2
+
     gGame.markedCount = 0;
     gGame.shownCount = 0;
     gGame.isOn = true;
-    gGame.clickedYet = false;
+    gGame.firstClick = false;
     gGame.secsPassed = 0;
+    gGame.isHint = false;
+    gGame.hintCount = 3;
 
-    document.querySelector(".timer").innerHTML = "TIMER:";
     clearInterval(gTimerInterval);
     gTimerInterval = 0;
+
+    document.querySelector(".timer").innerHTML = "TIMER:";
+    document.querySelector(".hint").classList.remove("hint-clicked");
+    document.querySelector(".restart").innerText = HAPPY;
+    document.querySelector(".lives").innerText = `Lives: \n${gLives}`;
+    document.querySelector(".flags").innerText = `flags: \n${mines}`;
 
     gBoard = buildBoard();
     renderBoard(gBoard);
     setMines(gBoard, mines);
     setMinesNegsCount(gBoard);
-
-    document.querySelector(".restart").innerText = "😀";
-    document.querySelector(".lives").innerText = `Lives: \n${gLives}`;
-    document.querySelector(".flags").innerText = `flags: \n${mines}`;
 }
 
 function buildBoard() {
@@ -88,85 +99,76 @@ function renderBoard(board) {
     elContainer.innerHTML = strHTML;
 }
 
-function cellClicked(elCell, cellI, cellJ, ev) {
-    // prevent menu for right click
-    elCell.addEventListener("contextmenu", (e) => e.preventDefault());
+function cellClicked(elCell, cellI, cellJ, event) {
+    const unreavealNeighbors = toggleNeighbors.bind(this, cellI, cellJ, gBoard, false);
+    const revealNeighbors = toggleNeighbors.bind(this, cellI, cellJ, gBoard, true);
+
+    elCell.addEventListener("contextmenu", (e) => e.preventDefault()); // prevent menu for right click
 
     if (!gGame.isOn) return; // if the game has ended you cannot click
-    if (!gGame.clickedYet) showTimer(); // timer start with the first click
 
-    var elFlags = document.querySelector(".flags");
+    if (!gGame.firstClick) showTimer(); // timer start with the first click
+
     var elLives = document.querySelector(".lives");
     var cell = gBoard[cellI][cellJ];
+    const markFlag = toggleFlag.bind(this, cell, cellI, cellJ, true);
+    const removeFlag = toggleFlag.bind(this, cell, cellI, cellJ, false);
 
     //check if the click was the right click
-    if (ev.which === 3) {
+    if (event.which === 3) {
         if (cell.isShown) return; // if you already revealed it you cannot put a flag
 
-        if (gGame.markedCount >= gLevel.SIZE) return;
-
         if (gGame.markedCount < gLevel.MINES) {
-            // you cannot put flag if you dont have any left
-            if (!cell.isMarked) {
-                // if it's already flagged, remove the flag
-                cell.isMarked = true;
-                gGame.markedCount++;
-                console.log(gGame.markedCount);
-                renderCell(cellI, cellJ, FLAG);
-                elCell.classList.add("marked");
-                elFlags.innerHTML = `Flags: \n${gLevel.MINES - gGame.markedCount}`;
-            } else if (cell.isMarked) {
-                cell.isMarked = false;
-                gGame.markedCount--;
-                console.log(gGame.markedCount);
-                renderCell(cellI, cellJ, EMPTY);
-                elCell.classList.remove("marked");
-                elFlags.innerHTML = `Flags: \n${gLevel.MINES - gGame.markedCount}`;
-                changeSmile();
-            }
+            if (!cell.isMarked) markFlag();
+            else if (cell.isMarked) removeFlag();
         } else {
-            if (cell.isMarked) {
-                cell.isMarked = false;
-                gGame.markedCount--;
-                console.log(gGame.markedCount);
-                renderCell(cellI, cellJ, EMPTY);
-                elCell.classList.remove("marked");
-                elFlags.innerHTML = `Flags: \n${gLevel.MINES - gGame.markedCount}`;
-                changeSmile();
-            }
+            if (cell.isMarked) removeFlag();
         }
+        changeSmile(WONDERING);
     }
 
     //check if the click was the left click
-    if (ev.which === 1) {
+    if (event.which === 1) {
+        if (cell.isShown) return;
+        if (gGame.isHint) {
+            revealNeighbors();
+            setTimeout(unreavealNeighbors, 1000);
+            gGame.isHint = false;
+            return;
+        }
+
         if (cell.isMarked) {
             cell.isMarked = false;
             gGame.markedCount--;
-            console.log(gGame.markedCount);
-            elCell.classList.remove("marked");
         }
+
         cell.isShown = true;
         gGame.shownCount++;
 
         var value = cell.minesAroundCount ? cell.minesAroundCount : EMPTY;
         renderCell(cellI, cellJ, value);
         elCell.classList.add("clicked");
+        fullExpand(cellI, cellJ, gBoard);
         // fullExpand(cellI, cellJ, gBoard);
-        changeSmile();
+        changeSmile(EXCITED);
 
         if (cell.isMine) {
             gLives--;
             renderCell(cellI, cellJ, MINE);
             elLives.innerHTML = `Lives: \n${gLives}`;
-            if (!gLives) gameOver(false); // game over when
+            changeSmile(HIT_BOMB);
+            if (gLives <= 0) {
+                gameOver(false);
+                return;
+            }
         }
     }
 
-    if (gGame.markedCount + gGame.shownCount === BEGINNER ** 2) gameOver(true);
+    if (gGame.markedCount + gGame.shownCount === gLevel.SIZE ** 2) gameOver(true);
 }
 
 function gameOver(isWin) {
-    document.querySelector(".restart").innerText = isWin ? "🤩" : "😩";
+    setTimeout(() => (document.querySelector(".restart").innerText = isWin ? WIN : LOSE), 500);
     gGame.isOn = false;
     for (let i = 0; i < gBoard.length; i++) {
         for (let j = 0; j < gBoard[i].length; j++) {
@@ -174,37 +176,8 @@ function gameOver(isWin) {
         }
     }
     clearInterval(gTimerInterval);
-    // alert("game over");
+    console.log(`you ${isWin ? "won" : "lost"}`);
 }
-
-// function fullExpand(cellI, cellJ, board) {
-//     if (cellI < 0 || cellI >= board.length - 1 || cellJ < 0 || cellJ >= board.length - 1) return;
-//     if (board[cellI][cellJ].minesAroundCount !== 0) return;
-//     if (board[cellI][cellJ].isShown) return;
-
-//     console.log("hi", board[cellI][cellJ]);
-//     var value = board[cellI][cellJ].minesAroundCount ? board[cellI][cellJ].minesAroundCount : EMPTY;
-//     board[cellI][cellJ].isShown = true;
-//     renderCell(cellI, cellJ, value);
-
-//     //send right
-//     var newJ = cellJ + 1;
-//     fullExpand(cellI, newJ, board);
-
-//     //send left
-//     newJ = cellJ - 1;
-//     fullExpand(cellI, newJ, board);
-
-//     //send up
-//     var newI = cellI - 1;
-//     fullExpand(newI, cellJ, board);
-
-//     //send down
-//     newI = cellI + 1;
-//     fullExpand(newI, cellJ, board);
-//     // renderCell({ i: cellI, j: cellJ }, board[cellI][cellJ]);
-//     // elCell.classList.add("clicked");
-// }
 
 function showTimer() {
     var elTimer = document.querySelector(".timer");
@@ -215,5 +188,64 @@ function showTimer() {
         gGame.secsPassed = parseInt((currTs - start) / 1000);
         elTimer.innerText = `TIMER:\n ${gGame.secsPassed}`;
     }, 1000);
-    gGame.clickedYet = true;
+    gGame.firstClick = true;
+}
+
+function fullExpand(cellI, cellJ, board) {
+    var outboundRow = cellI < 0 || cellI > board.length - 1;
+    var outboundColumn = cellJ < 0 || cellJ > board.length - 1;
+    var isNextToMine = board[cellI][cellJ].minesAroundCount > 0;
+    var cell = board[cellI][cellJ];
+
+    if (outboundRow || outboundColumn || isNextToMine || cell.isMine) return;
+
+    for (let i = cellI - 1; i <= cellI + 1; i++) {
+        if (i < 0 || i >= board.length) continue;
+        for (let j = cellJ - 1; j <= cellJ + 1; j++) {
+            var neighborCell = board[i][j];
+            var elCell = document.querySelector(`.cell-${i}-${j}`);
+
+            if (j < 0 || j >= board.length || neighborCell.isShown || (i === cellI && j === cellJ)) continue;
+
+            if (neighborCell.isMarked) {
+                gGame.markedCount--;
+                neighborCell.isMarked = false;
+            }
+            neighborCell.isShown = true;
+            gGame.shownCount++;
+            console.log(gGame.shownCount);
+            var value = neighborCell.minesAroundCount ? neighborCell.minesAroundCount : EMPTY;
+            elCell.classList.add("clicked");
+            renderCell(i, j, value);
+            if (neighborCell.minesAroundCount === 0) fullExpand(i, j, board);
+        }
+    }
+}
+
+function showHint(elHint) {
+    if (gGame.hintCount <= 0) return;
+    gGame.isHint = !gGame.isHint;
+    elHint.classList.toggle("hint-clicked");
+}
+
+function toggleNeighbors(cellI, cellJ, board, reveal) {
+    for (let i = cellI - 1; i <= cellI + 1; i++) {
+        if (i < 0 || i >= board.length) continue;
+        for (let j = cellJ - 1; j <= cellJ + 1; j++) {
+            var neighborCell = board[i][j];
+            if (j < 0 || j >= board.length || neighborCell.isShown) continue;
+            if (reveal) {
+                if (neighborCell.isMine) var value = MINE;
+                else var value = neighborCell.minesAroundCount ? neighborCell.minesAroundCount : EMPTY;
+            } else {
+                var value = neighborCell.isMarked ? FLAG : EMPTY;
+            }
+
+            renderCell(i, j, value);
+        }
+    }
+    if (!reveal) {
+        var elHintBtn = document.querySelector(".hint");
+        elHintBtn.classList.remove("hint-clicked");
+    } else gGame.hintCount--;
 }
